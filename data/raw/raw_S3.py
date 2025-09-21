@@ -3,12 +3,12 @@ import boto3
 import os
 
 # --- CONFIGURAÇÕES ---
-csv_path = r"C:\Users\Matheus\Downloads\archive\lung_cancer_dataset.csv"
+file_path = r"C:\Users\Matheus\Downloads\archive\lung_cancer_dataset.csv"
 parquet_path = "lung_cancer.parquet"
 bucket_name = "dados-raw-lungcancer"
 s3_key = "data/lung_cancer.parquet"
 
-df = pd.read_csv(csv_path)
+df = pd.read_csv(file_path)
 
 df.to_parquet(parquet_path, engine='pyarrow', compression='snappy', index=False)
 
