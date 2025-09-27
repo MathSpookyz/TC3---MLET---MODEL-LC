@@ -1,12 +1,10 @@
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, OrdinalEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 import pandas as pd
 
-def create_preprocessor(num_cols, cat_cols, ordinal_cols):
+def create_preprocessor(num_cols):
     preprocessor = ColumnTransformer([
         ('num', StandardScaler(), num_cols),
-        ('ord', OrdinalEncoder(categories=[['Low','Medium','High']]), ordinal_cols),
-        ('ohe', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat_cols)
     ])
     return preprocessor
 

@@ -1,49 +1,49 @@
-from src.data_processing import load_and_process_data
+from src.data_processing import fetch_financial_metrics
 from src.preprocessing import create_preprocessor, preview_transformation
-from src.eda import plot_distribution, summary_statistics
+from src.eda import summary_statistics, plot_distribution, plot_correlation_matrix
+import pandas as pd
 import os
-import sys
+from sklearn.preprocessing import OneHotEncoder
 
-# Define BASE_DIR como o diretório onde está o main.py
-BASE_DIR = os.path.dirname(__file__)
+# --- Tickers ---
+tickers = [
+    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'TSLA', 'META',
+    'BRK-B', 'JPM', 'V', 'JNJ', 'WMT', 'UNH', 'LLY', 'XOM', 'MA',
+    'PG', 'HD', 'BAC', 'DIS', 'NFLX', 'ADBE', 'CRM', 'CSCO', 'NKE',
+    'KO', 'MCD', 'PFE', 'ORCL',
+    'VALE3.SA', 'PETR4.SA', 'ITUB4.SA', 'BBDC4.SA', 'BBAS3.SA', 
+    'ABEV3.SA', 'RENT3.SA', 'WEGE3.SA', 'ELET3.SA', 'SUZB3.SA', 
+    'B3SA3.SA', 'GGBR4.SA', 'EGIE3.SA', 'HAPV3.SA', 'RDOR3.SA', 
+    'TOTS3.SA', 'RADL3.SA', 'PRIO3.SA', 'LREN3.SA', 'MGLU3.SA', 
+    'VIVT3.SA', 'SBSP3.SA', 'FLRY3.SA', 'GOAU4.SA', 'CPLE6.SA', 
+    'ENGI11.SA', 'SANB11.SA', 'BPAC11.SA', 'CXSE3.SA', 'ASAI3.SA'
+]
 
-# Caminho para o dataset dentro da pasta data/raw
-file_path = os.path.join(BASE_DIR, "data", "raw", "lung_cancer_dataset.csv")
+# --- Fetch financial metrics ---
+df = fetch_financial_metrics(tickers)
 
-# Carrega e processa os dados
-df = load_and_process_data(file_path)
+# --- Preprocessing ---
+num_cols = ['roe','debt_to_equity','profit_margins','beta','market_cap',
+            'net_income','total_equity','total_debt']
 
-# Estatísticas descritivas
-summary_statistics(df)
+# Garantir que colunas numéricas são float
+for col in num_cols:
+    df[col] = pd.to_numeric(df[col], errors='coerce')
+    df[col].fillna(df[col].median(), inplace=True)
 
-# Plot de distribuição de colunas numéricas
-for col in ['age','pack_years','exposure_count']:
+preprocessor = create_preprocessor(num_cols=num_cols)
+X_transformed = preview_transformation(preprocessor, df[num_cols])
+
+df_processed = X_transformed.copy()
+df_processed['ticker'] = df['ticker'].values  # opcional, para referência
+
+# --- EDA ---
+# Estatísticas descritivas apenas das colunas numéricas
+summary_statistics(df[num_cols])
+
+# Histogramas apenas das colunas numéricas
+for col in num_cols:
     plot_distribution(df, col)
 
-# Pasta para salvar o arquivo
-output_dir = os.path.join(BASE_DIR, "data", "processed")
-
-df = load_and_process_data(file_path)
-
-num_cols = ['age','pack_years','exposure_count']
-ordinal_cols = ['radon_exposure']
-cat_cols = ['gender','asbestos_exposure','secondhand_smoke_exposure','copd_diagnosis','alcohol_consumption','family_history']
-
-preprocessor = create_preprocessor(num_cols, cat_cols, ordinal_cols)
-
-X = df.drop(columns=['lung_cancer'])
-
-# Preview transformação
-preview_transformation(preprocessor, X)
-
-# Caminho completo do arquivo CSV
-output_file = os.path.join(output_dir, "lung_cancer_transformed.csv")
-
-transformed_df = preview_transformation(preprocessor, X)
-# Salva o dataframe
-transformed_df.to_csv(output_file, index=False)
-
-print(f"Arquivo salvo em: {output_file}")
-
-print("Python path:", sys.path)
-print("Current dir:", os.getcwd())
+# Correlação apenas das colunas numéricas
+plot_correlation_matrix(df[num_cols])

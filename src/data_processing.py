@@ -1,21 +1,45 @@
 import pandas as pd
+import yfinance as yf
 
-file_path = r"C:\Users\Matheus\Downloads\archive\lung_cancer_dataset.csv"
+def fetch_financial_metrics(tickers):
+    """
+    Busca métricas financeiras atuais para múltiplos tickers usando yfinance.
+    Retorna DataFrame pronto para pré-processamento.
+    """
+    data_list = []
 
-def load_and_process_data(file_path):
-    df = pd.read_csv(file_path)
-    df = df.drop(columns=['patient_id'])
-    # imputação
-    df['age'].fillna(df['age'].median(), inplace=True)
-    df['pack_years'].fillna(df['pack_years'].median(), inplace=True)
-    # engenharia de features
-    df['exposure_count'] = df[['asbestos_exposure','secondhand_smoke_exposure','copd_diagnosis','family_history']]\
-                            .apply(lambda x: sum([1 if v in ['Yes','High'] else 0 for v in x]), axis=1)
+    for t in tickers:
+        ticker = yf.Ticker(t)
+        info = ticker.info
+        financials = ticker.financials
+        balance_sheet = ticker.balance_sheet
+
+        try:
+            net_income = financials.loc['Net Income'].iloc[0]
+        except Exception:
+            net_income = None
+
+        try:
+            total_equity = balance_sheet.loc['Total Equity Gross Minority Interest'].iloc[0]
+        except Exception:
+            total_equity = None
+
+        try:
+            total_debt = balance_sheet.loc['Total Liabilities Net Minority Interest'].iloc[0]
+        except Exception:
+            total_debt = None
+
+        data_list.append({
+            'ticker': t,
+            'roe': info.get('returnOnEquity'),
+            'debt_to_equity': info.get('debtToEquity'),
+            'profit_margins': info.get('profitMargins'),
+            'beta': info.get('beta'),
+            'market_cap': info.get('marketCap'),
+            'net_income': net_income,
+            'total_equity': total_equity,
+            'total_debt': total_debt
+        })
+
+    df = pd.DataFrame(data_list)
     return df
-
-df = load_and_process_data(file_path)
-
-# Resumo estatístico
-print(df.describe(include='all'))   # estatísticas
-print(df.info())                    # tipos de dados
-print(df.head())                    # primeiras linhas
