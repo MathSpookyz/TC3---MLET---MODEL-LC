@@ -26,8 +26,7 @@ def calculate_inertia(scaled_features):
     
     
 def apply_kmeans_and_visualize(scaled_features, data, optimal_k=3):
-    # Normalize inputs to DataFrame for feature names
-    # Determine feature column names: prefer data columns if present, otherwise default
+    # 1. Garante que os dados estão em formato DataFrame e com nomes de colunas corretos
     if isinstance(data, pd.DataFrame):
         possible_cols = [c for c in DEFAULT_NUM_COLS if c in data.columns]
     else:
@@ -35,43 +34,36 @@ def apply_kmeans_and_visualize(scaled_features, data, optimal_k=3):
 
     if isinstance(scaled_features, pd.DataFrame):
         features_df = scaled_features.copy()
-        # if no column names, try to set them from possible_cols
         if features_df.columns.dtype == object and len(features_df.columns) == len(possible_cols):
             features_df.columns = possible_cols or features_df.columns
     else:
-        # scaled_features is array-like -> try to create DataFrame with possible_cols or DEFAULT
         cols = possible_cols if len(possible_cols) == np.shape(scaled_features)[1] else DEFAULT_NUM_COLS[:np.shape(scaled_features)[1]]
         features_df = pd.DataFrame(scaled_features, columns=cols)
 
-    # Ensure numeric-only features for clustering
+    # 2. Seleciona apenas as colunas numéricas para o agrupamento
     numeric_features = features_df.select_dtypes(include=[np.number])
     if numeric_features.shape[1] == 0:
         raise ValueError("No numeric features available for clustering.")
 
-    # Fit KMeans
-    # kmeans_model = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
+    # 3. Aplica o KMeans para agrupar os dados
     kmeans_model = KMeans(n_clusters=optimal_k)
     clusters = kmeans_model.fit_predict(numeric_features.values)
 
-    # Build results DataFrame
+    # 4. Monta o DataFrame de resultados, incluindo os dados originais e os escalados
     if isinstance(data, pd.DataFrame):
         results = data.reset_index(drop=True).copy()
     else:
         results = pd.DataFrame(index=range(len(clusters)))
 
-    # attach scaled numeric features (for reference/visualization)
-    # prefix to indicate scaled values
     scaled_prefixed = numeric_features.add_prefix('scaled_').reset_index(drop=True)
     results = pd.concat([results.reset_index(drop=True), scaled_prefixed], axis=1)
-
     results['Cluster'] = clusters
 
-    # For cluster summary try to show means on original numeric columns if present, otherwise on scaled
+    # 5. Calcula e mostra as médias dos clusters para ROE e D/E
     summary_cols = [c for c in ['roe', 'debt_to_equity'] if c in results.columns]
     if len(summary_cols) >= 2:
         cluster_means = results.groupby('Cluster')[summary_cols].mean()
     else:
-        # fallback to scaled versions
         cluster_means = results.groupby('Cluster')[[f'scaled_roe', f'scaled_debt_to_equity']].mean().rename(columns={
             'scaled_roe': 'roe', 'scaled_debt_to_equity': 'debt_to_equity'
         })
@@ -79,24 +71,24 @@ def apply_kmeans_and_visualize(scaled_features, data, optimal_k=3):
     print("\nMédias dos Clusters (por ROE e D/E quando disponíveis):")
     print(cluster_means)
 
-    # Visualization using scaled roe and scaled debt_to_equity if present
+    # 6. Visualiza os clusters em um gráfico de dispersão
     x_col = 'scaled_roe' if 'scaled_roe' in results.columns else ( 'roe' if 'roe' in results.columns else results.columns[0] )
     y_col = 'scaled_debt_to_equity' if 'scaled_debt_to_equity' in results.columns else ( 'debt_to_equity' if 'debt_to_equity' in results.columns else results.columns[1] )
 
     plt.figure(figsize=(10, 7))
     sns.scatterplot(x=x_col, y=y_col, hue='Cluster', data=results, palette='viridis', s=100, legend='full')
 
-    # annotate tickers if available
-    ticker_col = None
-    for candidate in ['ticker', 'Ticker']:
-        if candidate in results.columns:
-            ticker_col = candidate
-            break
+    # Adiciona os tickers como rótulo nos pontos do gráfico
+    # ticker_col = None
+    # for candidate in ['ticker', 'Ticker']:
+    #     if candidate in results.columns:
+    #         ticker_col = candidate
+    #         break
 
-    if ticker_col:
-        for _, row in results.iterrows():
-            plt.annotate(str(row[ticker_col]), (row[x_col], row[y_col]), xytext=(5,5), textcoords='offset points', fontsize=8,
-                         bbox=dict(facecolor='white', alpha=0.6, edgecolor='none'))
+    # if ticker_col:
+    #     for _, row in results.iterrows():
+    #         plt.annotate(str(row[ticker_col]), (row[x_col], row[y_col]), xytext=(5,5), textcoords='offset points', fontsize=8,
+    #                      bbox=dict(facecolor='white', alpha=0.6, edgecolor='none'))
 
     plt.title('Classificação de Empresas (ROE vs D/E) - escalado quando aplicável')
     plt.xlabel(x_col)
