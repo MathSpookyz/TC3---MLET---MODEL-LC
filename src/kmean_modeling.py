@@ -79,16 +79,16 @@ def apply_kmeans_and_visualize(scaled_features, data, optimal_k=3):
     sns.scatterplot(x=x_col, y=y_col, hue='Cluster', data=results, palette='viridis', s=100, legend='full')
 
     # Adiciona os tickers como rótulo nos pontos do gráfico
-    # ticker_col = None
-    # for candidate in ['ticker', 'Ticker']:
-    #     if candidate in results.columns:
-    #         ticker_col = candidate
-    #         break
+    ticker_col = None
+    for candidate in ['ticker', 'Ticker']:
+        if candidate in results.columns:
+            ticker_col = candidate
+            break
 
-    # if ticker_col:
-    #     for _, row in results.iterrows():
-    #         plt.annotate(str(row[ticker_col]), (row[x_col], row[y_col]), xytext=(5,5), textcoords='offset points', fontsize=8,
-    #                      bbox=dict(facecolor='white', alpha=0.6, edgecolor='none'))
+    if ticker_col:
+        for _, row in results.iterrows():
+            plt.annotate(str(row[ticker_col]), (row[x_col], row[y_col]), xytext=(5,5), textcoords='offset points', fontsize=8,
+                         bbox=dict(facecolor='white', alpha=0.6, edgecolor='none'))
 
     plt.title('Classificação de Empresas (ROE vs D/E) - escalado quando aplicável')
     plt.xlabel(x_col)
