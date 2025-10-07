@@ -1,15 +1,15 @@
-# TC3---MLET---MODEL-LC
+# TC3---MLET---MODEL-AF
 
 1) Qual é o seu problema?
     - Classifição de empresas listadas em bolsa com base nos valores atrelados ao equity da empresa.
-    - No caso os valores selecionados são o ROE, que indica o retorno em relação ao Equity. E a dívida sobre o Equity, que indica o quanto que uma empresa está endividada em relação ao seu Equity
+    - Os valores selecionados são o ROE, que indica o retorno em relação ao Equity. E a dívida sobre o Equity, que indica o quanto uma empresa está endividada em relação ao seu Equity
     - Vamos validar a relacão dívida e retorno tendo como base o Equity das empresas
 2) Coleta de dados
     - Yahoo finance
-    - Os dados são limitados devido a necessidade de buscas um ativo por vez, por isso tivemos que limitar os dados que teremos acesso
+    - Os dados são limitados devido a necessidade de buscar um ativo por vez, por isso tivemos que limitar os dados que teremos acesso
 3) Armazenamento
     - Não estruturado
-        - CSV no S3
+        - CSV no bucket S3
 4) Analisar
     - Qual é o comportamento do seu dado?
 	    - Os dados são atrelados a empresas em relação ao retorno e dívida em relação ao Equity
@@ -41,9 +41,9 @@
 		- **Empresas com D/E alto** podem estar mais alavancadas, correndo mais risco, mas podem ter ROE elevado se usam bem a dívida.
 		- **Clusters ajudam a identificar grupos de empresas com estratégias financeiras semelhantes**, facilitando comparações e decisões de investimento.
 5) Processamento dos dados (se necessário)
-	- **Enriquecimento dos dados** - Com os dados básicos dos tickers, você buscamos as métricas financeiras como ROE, Debt-to-Equity, lucro, patrimônio. Com esses dados realizamos a normalização e tratamento de dados
+	- **Enriquecimento dos dados** - Com os dados básicos dos tickers, buscamos as métricas financeiras como ROE, Debt-to-Equity, lucro, patrimônio. Com esses dados realizamos a normalização e tratamento de dados
 	 - **Enriquecimento de chave x valor** - Isso é feito ao montar o DataFrame com as informações coletadas para cada empresa.
-	 - **Cálculo** - No seu caso, já utiliza cálculos como ROE e Debt-to-Equity, que são indicadores compostos.
+	 - **Cálculo** - Já utilizamos cálculos como ROE e Debt-to-Equity, que são indicadores compostos.
 
  ```python
  # 1. Coleta dos dados financeiros
@@ -79,23 +79,23 @@ results = apply_kmeans_and_visualize(df_processed, data, optimal_k=4)
 - **Escolha do modelo:** Utilização do algoritmo KMeans para agrupar empresas com perfis financeiros semelhantes.
 
 - Escolher o modelo
-Você escolheu o KMeans para agrupar empresas com perfis financeiros semelhantes. Outros modelos poderiam ser testados, como DBSCAN ou Gaussian Mixture, dependendo do objetivo.
+Escolhemos o KMeans para agrupar empresas com perfis financeiros semelhantes. Outros modelos poderiam ser testados, como DBSCAN ou Gaussian Mixture, dependendo do objetivo.
 
 - Testar os modelos (métricas de avaliação)
-Para clustering, uma métrica comum é a inércia (usada no método do cotovelo) e o silhouette score. Você pode comparar diferentes valores de K e diferentes algoritmos para ver qual separa melhor os grupos.
+Para clustering, uma métrica comum é a inércia (usada no método do cotovelo) e o silhouette score. Comparamos diferentes valores de K e diferentes algoritmos para ver qual separa melhor os grupos, resultado melhor otimizado foi com kmeans.
 
 - Comparar as versões do modelo
-Teste diferentes configurações (número de clusters, features usadas, algoritmos) e compare as métricas de avaliação. Escolha a versão que melhor representa os grupos de interesse.
+Testamos diferentes configurações (número de clusters, features usadas, algoritmos) e comparando as métricas de avaliação.
 
 - Interpretar os resultados
 Analise os clusters formados: quais empresas estão juntas? Quais métricas são mais relevantes para a separação? Use estatísticas descritivas e visualizações para entender o perfil de cada grupo.
 
 - Escolha do modelo "campeão"
-O modelo campeão é aquele que melhor separa os grupos de acordo com o contexto do negócio e as métricas de avaliação. No seu caso, pode ser o KMeans com determinado valor de K que apresenta clusters bem definidos e interpretáveis.
+O modelo campeão é aquele que melhor separa os grupos de acordo com o contexto do negócio e as métricas de avaliação. O KMeans com determinado valor de K que apresenta clusters bem definidos e interpretáveis, obteve a melhor divisão e uma visão mais clara dos resultados esperados.
 
 
 7) Deploy
-    - Está sendo utilizado pelo Superset para validação e tomada de decisão com base nos dados coletados e categorizados
+    - Estamos utilizando o Superset para validação e tomada de decisão com base nos dados coletados e categorizados, podendo realizar consultas SQL, e plotagem de gráficos para evidência dos resultados.
 
 
 ## **Conclusões dos Dados**
@@ -126,7 +126,7 @@ O modelo campeão é aquele que melhor separa os grupos de acordo com o contexto
 
 ---
 
-**Resumo para apresentação:**
+**Conclusões:**
 
 - O agrupamento permitiu identificar grupos de empresas com características financeiras semelhantes.
 - As estatísticas e visualizações facilitam a análise dos perfis e dos riscos de cada grupo.
