@@ -27,8 +27,10 @@ tickers = [
 data = fetch_financial_metrics(tickers)
 
 # --- Preprocessing ---
-# Preprocessing only for ROE and Debt-to-Equity
-num_cols = ['roe', 'debt_to_equity']
+num_cols = ['roe','debt_to_equity','profit_margins','beta','market_cap',
+            'net_income','total_equity','total_debt']
+
+# Garantir que colunas numéricas são float
 for col in num_cols:
     data[col] = pd.to_numeric(data[col], errors='coerce')
     data[col].fillna(data[col].median(), inplace=True)
@@ -36,10 +38,22 @@ for col in num_cols:
 preprocessor = create_preprocessor(num_cols=num_cols)
 scaled_features = preview_transformation(preprocessor, data[num_cols])
 
-df_processed = pd.DataFrame(scaled_features, columns=num_cols)
-df_processed['ticker'] = data['ticker'].values
+df_processed = pd.DataFrame(scaled_features)
+df_processed['ticker'] = data['ticker'].values  # opcional, para referência
 
-results = apply_kmeans_and_visualize(df_processed, data, optimal_k=4)
+# --- EDA ---
+# Estatísticas descritivas apenas das colunas numéricas
+# summary_statistics(df[num_cols])
+
+# Histogramas apenas das colunas numéricas
+# for col in num_cols:
+#     plot_distribution(data, col)
+
+# Correlação apenas das colunas numéricas
+# plot_correlation_matrix(data[num_cols])
+
+# calculate_inertia(scaled_features=scaled_features)
+results = apply_kmeans_and_visualize(scaled_features, data, optimal_k=6)
 
 # Show the head of each cluster
 for cluster_id in sorted(results['Cluster'].unique()):
